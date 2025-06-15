@@ -9,16 +9,19 @@ import { CategoryFilter } from '@/components/category-filter';
 import { StyleSuggestionSection } from '@/components/style-suggestion-section';
 import { OutfitCard } from '@/components/outfit-card';
 import { OutfitPlanner } from '@/components/outfit-planner';
+import { ClothingItemCardSkeleton } from '@/components/clothing-item-card-skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card"; // Added Card and CardContent imports
 
 import type { ClothingItem, Category, Outfit } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Smile, Loader2, PackagePlus, Trash2, Shirt, Users, CalendarDays } from 'lucide-react';
+import { Smile, Loader2, PackagePlus, Trash2, Shirt, Users, CalendarDays, Lightbulb } from 'lucide-react';
 
 import { getWardrobeItems, addClothingItem, updateClothingItem, deleteClothingItem, type AddClothingItemData, type UpdateClothingItemData } from '@/app/actions/wardrobeActions';
 import { getOutfits, createOutfit, deleteOutfit as deleteOutfitAction } from '@/app/actions/outfitActions';
@@ -35,16 +38,20 @@ export default function HomePage() {
   
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
   const { toast } = useToast();
-  const [isProcessing, startTransition] = useTransition(); // General purpose transition
+  const [isProcessing, startTransition] = useTransition();
   const [isLoadingItems, setIsLoadingItems] = useState(true);
   const [isLoadingOutfits, setIsLoadingOutfits] = useState(true);
   const [currentYear, setCurrentYear] = useState<number | null>(null);
 
-  // State for creating outfits
   const [isSelectionMode, setIsSelectionMode] = useState(false);
   const [selectedItemIdsForOutfit, setSelectedItemIdsForOutfit] = useState<Set<string>>(new Set());
   const [isCreateOutfitDialogOpen, setIsCreateOutfitDialogOpen] = useState(false);
   const [newOutfitName, setNewOutfitName] = useState("");
+  const [isMobileAISheetOpen, setIsMobileAISheetOpen] = useState(false);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   const fetchWardrobeItems = async () => {
     setIsLoadingItems(true);
@@ -77,7 +84,6 @@ export default function HomePage() {
   useEffect(() => {
     fetchWardrobeItems();
     fetchOutfits();
-    setCurrentYear(new Date().getFullYear());
   }, [toast]);
 
   const handleAddItemClick = () => {
@@ -100,7 +106,7 @@ export default function HomePage() {
         try {
           await deleteClothingItem(itemToDelete.id!);
           toast({ title: "Artículo Eliminado", description: `"${itemToDelete.name}" ha sido eliminado.` });
-          await fetchWardrobeItems(); // Refresh items
+          await fetchWardrobeItems(); 
           setItemToDelete(undefined);
         } catch (error) {
           console.error('Error deleting item:', error);
@@ -120,7 +126,7 @@ export default function HomePage() {
           await addClothingItem(data as AddClothingItemData);
           toast({ title: "Artículo Agregado", description: `"${data.name}" ha sido agregado.` });
         }
-        await fetchWardrobeItems(); // Refresh items
+        await fetchWardrobeItems(); 
         setIsFormOpen(false);
         setEditingItem(undefined);
       } catch (error) {
@@ -135,7 +141,6 @@ export default function HomePage() {
     return wardrobeItems.filter(item => item.category === selectedCategory);
   }, [wardrobeItems, selectedCategory]);
 
-  // Outfit creation logic
   const toggleItemSelectionForOutfit = (itemId: string) => {
     setSelectedItemIdsForOutfit(prev => {
       const newSet = new Set(prev);
@@ -157,7 +162,7 @@ export default function HomePage() {
       try {
         await createOutfit(newOutfitName, Array.from(selectedItemIdsForOutfit));
         toast({ title: "Atuendo Creado", description: `"${newOutfitName}" ha sido guardado.` });
-        await fetchOutfits(); // Refresh outfits
+        await fetchOutfits(); 
         setIsCreateOutfitDialogOpen(false);
         setNewOutfitName("");
         setSelectedItemIdsForOutfit(new Set());
@@ -179,7 +184,7 @@ export default function HomePage() {
         try {
           await deleteOutfitAction(outfitToDelete.id!);
           toast({ title: "Atuendo Eliminado", description: `"${outfitToDelete.name}" ha sido eliminado.` });
-          await fetchOutfits(); // Refresh outfits
+          await fetchOutfits(); 
           setOutfitToDelete(undefined);
         } catch (error) {
           console.error('Error deleting outfit:', error);
@@ -189,6 +194,10 @@ export default function HomePage() {
     }
   };
   
+  const handleOutfitCreatedFromAI = () => {
+    fetchOutfits();
+    setIsMobileAISheetOpen(false); // Close sheet if AI outfit is created from mobile
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -198,24 +207,45 @@ export default function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
             <Tabs defaultValue="wardrobe" className="w-full">
-              <TabsList className="grid w-full grid-cols-3 mb-6">
-                <TabsTrigger value="wardrobe"><Shirt className="mr-2 h-4 w-4" />Mi Armario</TabsTrigger>
-                <TabsTrigger value="outfits"><Users className="mr-2 h-4 w-4" />Mis Atuendos</TabsTrigger>
-                <TabsTrigger value="planner"><CalendarDays className="mr-2 h-4 w-4" />Planificador</TabsTrigger>
-              </TabsList>
+              <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
+                <TabsList className="grid w-full sm:w-auto grid-cols-3 mb-2 sm:mb-0">
+                  <TabsTrigger value="wardrobe"><Shirt className="mr-1 sm:mr-2 h-4 w-4" />Mi Armario</TabsTrigger>
+                  <TabsTrigger value="outfits"><Users className="mr-1 sm:mr-2 h-4 w-4" />Mis Atuendos</TabsTrigger>
+                  <TabsTrigger value="planner"><CalendarDays className="mr-1 sm:mr-2 h-4 w-4" />Planificador</TabsTrigger>
+                </TabsList>
+                <div className="lg:hidden">
+                  <Sheet open={isMobileAISheetOpen} onOpenChange={setIsMobileAISheetOpen}>
+                    <SheetTrigger asChild>
+                      <Button variant="outline" size="sm">
+                        <Lightbulb className="mr-2 h-4 w-4" /> Sugerencias IA
+                      </Button>
+                    </SheetTrigger>
+                    <SheetContent side="bottom" className="h-[80vh]">
+                       <SheetHeader className="mb-4">
+                         <SheetTitle>Sugerencias de Estilo IA</SheetTitle>
+                         <SheetDescription>
+                           Obtén ideas de atuendos basadas en tu armario actual.
+                         </SheetDescription>
+                       </SheetHeader>
+                      <StyleSuggestionSection wardrobe={wardrobeItems} onOutfitCreated={handleOutfitCreatedFromAI} />
+                    </SheetContent>
+                  </Sheet>
+                </div>
+              </div>
 
-              {/* Tab: Mi Armario */}
+
               <TabsContent value="wardrobe">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 p-4 bg-card rounded-lg shadow">
                   <h2 className="text-2xl font-headline">Mi Armario</h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col xs:flex-row items-center gap-2 w-full xs:w-auto">
                     <Button 
                       variant={isSelectionMode ? "default" : "outline"} 
                       size="sm" 
                       onClick={() => {
                         setIsSelectionMode(!isSelectionMode);
-                        if (isSelectionMode) setSelectedItemIdsForOutfit(new Set()); // Clear selection when exiting mode
+                        if (isSelectionMode) setSelectedItemIdsForOutfit(new Set());
                       }}
+                      className="w-full xs:w-auto"
                     >
                       {isSelectionMode ? "Cancelar Selección" : "Seleccionar para Atuendo"}
                     </Button>
@@ -226,19 +256,23 @@ export default function HomePage() {
                   </div>
                 </div>
                 {isSelectionMode && selectedItemIdsForOutfit.size > 0 && (
-                  <div className="mb-4 p-3 bg-primary/10 rounded-lg flex justify-between items-center">
+                  <div className="mb-4 p-3 bg-primary/10 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
                     <p className="text-sm font-medium text-primary-foreground">
                       {selectedItemIdsForOutfit.size} artículo(s) seleccionados.
                     </p>
-                    <Button size="sm" onClick={() => setIsCreateOutfitDialogOpen(true)} className="bg-accent hover:bg-accent/90 text-accent-foreground">
+                    <Button size="sm" onClick={() => setIsCreateOutfitDialogOpen(true)} className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
                       <PackagePlus className="mr-2 h-4 w-4"/> Crear Atuendo
                     </Button>
                   </div>
                 )}
-                {isProcessing || isLoadingItems ? (
-                  <div className="flex justify-center items-center py-12"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+                {isLoadingItems ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <ClothingItemCardSkeleton key={index} />
+                    ))}
+                  </div>
                 ) : filteredItems.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                     {filteredItems.map(item => (
                       <ClothingItemCard
                         key={item.id}
@@ -262,17 +296,20 @@ export default function HomePage() {
                 )}
               </TabsContent>
 
-              {/* Tab: Mis Atuendos */}
               <TabsContent value="outfits">
                 <div className="flex justify-between items-center mb-6 p-4 bg-card rounded-lg shadow">
                    <h2 className="text-2xl font-headline">Mis Atuendos (Lookbook)</h2>
                 </div>
                 {isLoadingOutfits ? (
-                  <div className="flex justify-center items-center py-12"><Loader2 className="h-16 w-16 animate-spin text-primary" /></div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {Array.from({ length: 4 }).map((_, index) => (
+                       <Card key={index} className="h-60"><CardContent className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></CardContent></Card>
+                    ))}
+                  </div>
                 ) : outfits.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     {outfits.map(outfit => (
-                      <OutfitCard key={outfit.id} outfit={outfit} onDelete={handleDeleteOutfitPrompt} />
+                      <OutfitCard key={outfit.id} outfit={outfit} onDelete={() => handleDeleteOutfitPrompt(outfit)} />
                     ))}
                   </div>
                 ) : (
@@ -284,15 +321,13 @@ export default function HomePage() {
                 )}
               </TabsContent>
 
-              {/* Tab: Planificador */}
               <TabsContent value="planner">
                 <OutfitPlanner />
               </TabsContent>
             </Tabs>
           </div>
 
-          {/* AI Suggestions Section (Sidebar) */}
-          <div className="lg:col-span-1">
+          <div className="hidden lg:block lg:col-span-1">
             <div className="sticky top-24 space-y-6">
                <StyleSuggestionSection wardrobe={wardrobeItems} onOutfitCreated={fetchOutfits} />
             </div>
@@ -300,7 +335,6 @@ export default function HomePage() {
         </div>
       </main>
 
-      {/* Dialogs */}
       <ClothingForm
         isOpen={isFormOpen}
         onClose={() => {setIsFormOpen(false); setEditingItem(undefined);}}
@@ -349,7 +383,7 @@ export default function HomePage() {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setItemToDelete(undefined)} disabled={isProcessing}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteItem} className="bg-destructive hover:bg-destructive/90" disabled={isProcessing}>
-              {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Eliminar
+              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -366,14 +400,14 @@ export default function HomePage() {
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => setOutfitToDelete(undefined)} disabled={isProcessing}>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={confirmDeleteOutfit} className="bg-destructive hover:bg-destructive/90" disabled={isProcessing}>
-              {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null} Eliminar Atuendo
+              {isProcessing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Eliminar Atuendo
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
       
       <footer className="text-center py-6 border-t text-sm text-muted-foreground">
-        <p>&copy; {currentYear ?? new Date().getFullYear()} ArmarioIA. Todos los derechos reservados.</p>
+        <p>&copy; {currentYear ?? ''} ArmarioIA. Todos los derechos reservados.</p>
       </footer>
     </div>
   );

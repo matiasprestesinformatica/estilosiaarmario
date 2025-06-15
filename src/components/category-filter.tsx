@@ -1,3 +1,4 @@
+
 "use client";
 
 import {
@@ -20,10 +21,10 @@ interface CategoryFilterProps {
 
 export function CategoryFilter({ selectedCategory, onCategoryChange }: CategoryFilterProps) {
   return (
-    <div className="flex items-center space-x-2">
-      <Filter className="h-5 w-5 text-muted-foreground" />
+    <div className="flex items-center space-x-2 w-full xs:w-auto">
+      <Filter className="h-5 w-5 text-muted-foreground hidden xs:block" />
       <Select onValueChange={(value: Category | 'all') => onCategoryChange(value)} value={selectedCategory}>
-        <SelectTrigger className="w-[200px] md:w-[280px]">
+        <SelectTrigger className="w-full xs:w-[200px] md:w-[280px]">
           <SelectValue placeholder="Filtrar por categoría" />
         </SelectTrigger>
         <SelectContent>

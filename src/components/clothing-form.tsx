@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -64,7 +65,7 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData, isPending
   });
 
   useEffect(() => {
-    if (isOpen) { // Only reset form when dialog opens or initialData changes while open
+    if (isOpen) { 
       if (initialData) {
         form.reset({
           name: initialData.name,
@@ -76,7 +77,7 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData, isPending
         form.reset({
           name: "",
           category: undefined,
-          imageUrl: "https://placehold.co/400x300.png", // Default placeholder
+          imageUrl: "https://placehold.co/400x300.png", 
           description: "",
         });
       }
@@ -86,7 +87,6 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData, isPending
 
   const handleSubmit = (values: ClothingFormValues) => {
     onSubmit(values, initialData?.id);
-    // Do not reset form here, onSubmit callback should handle closing and resetting state
   };
   
   const handleOpenChange = (open: boolean) => {
@@ -97,14 +97,14 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData, isPending
 
   return (
     <Dialog open={isOpen} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[425px] md:sm:max-w-[600px] bg-card text-card-foreground">
+      <DialogContent className="w-[95vw] max-w-md sm:max-w-lg bg-card text-card-foreground">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl">
             {initialData ? "Editar Artículo" : "Agregar Nuevo Artículo"}
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6 p-1">
+          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4 md:space-y-6 p-1 max-h-[80vh] overflow-y-auto">
             <FormField
               control={form.control}
               name="name"

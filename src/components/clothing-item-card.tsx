@@ -8,7 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Edit3, Trash2, CalendarDays, CheckSquare, Square } from 'lucide-react';
+import { Edit3, Trash2, CalendarDays } from 'lucide-react';
 import type { ClothingItem } from '@/lib/types';
 import { CATEGORIES } from '@/lib/constants';
 import { cn } from '@/lib/utils';
@@ -37,15 +37,12 @@ export function ClothingItemCard({
     if (isSelectionMode && onSelectToggle) {
       onSelectToggle(item.id);
     }
-    // If not in selection mode, card click does nothing extra,
-    // or you could implement a detail view navigation here.
   };
-
 
   return (
     <Card 
       className={cn(
-        "flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out",
+        "flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out animate-fade-in",
         isSelectionMode && "cursor-pointer",
         isSelected && isSelectionMode && "ring-2 ring-primary border-primary"
       )}
@@ -62,7 +59,7 @@ export function ClothingItemCard({
             />
           </div>
         )}
-        <div className="relative w-full h-60">
+        <div className="relative w-full h-60"> {/* Fixed height for the image container */}
           <Image
             src={item.imageUrl || "https://placehold.co/400x300.png"}
             alt={item.name}
