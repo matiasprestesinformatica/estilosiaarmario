@@ -1,6 +1,5 @@
-
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -9,31 +8,32 @@ generator client {
 }
 
 model ClothingItem {
-  id          String    @id @default(cuid())
-  name        String
-  category    String    // Was enum, changed to String due to SQLite limitations
-  imageUrl    String
-  description String?
-  dateAdded   DateTime  @default(now())
-  outfits     Outfit[]  @relation("OutfitClothingItems")
+  id            String    @id @default(cuid())
+  name          String
+  category      String
+  imageUrl      String
+  description   String?
+  dateAdded     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  outfits       Outfit[]  @relation("OutfitToClothingItem")
 }
 
 model Outfit {
   id            String          @id @default(cuid())
   name          String
-  clothingItems ClothingItem[]  @relation("OutfitClothingItems")
-  plannedDates  PlannedOutfit[]
+  clothingItems ClothingItem[]  @relation("OutfitToClothingItem")
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
+  plannedOutfit PlannedOutfit[]
 }
 
 model PlannedOutfit {
   id        String   @id @default(cuid())
-  date      DateTime // Represents the specific date (YYYY-MM-DD at midnight UTC)
+  date      DateTime @unique // Unique date for planning
   outfitId  String
-  outfit    Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  outfit    Outfit   @relation(fields: [outfitId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@unique([date]) // Assuming single user, one outfit per day.
+  @@index([outfitId])
 }
