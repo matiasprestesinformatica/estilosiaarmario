@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
@@ -21,6 +22,7 @@ export default function HomePage() {
   const { toast } = useToast();
   const [isPending, startTransition] = useTransition();
   const [isLoadingItems, setIsLoadingItems] = useState(true);
+  const [currentYear, setCurrentYear] = useState<number | null>(null);
 
   useEffect(() => {
     const loadItems = async () => {
@@ -30,13 +32,18 @@ export default function HomePage() {
         setWardrobeItems(items);
       } catch (error) {
         console.error("Failed to load wardrobe items:", error);
-        toast({ title: "Error", description: "No se pudieron cargar los artículos del armario.", variant: "destructive" });
+        const errorMessage = error instanceof Error ? error.message : "No se pudieron cargar los artículos del armario.";
+        toast({ title: "Error", description: errorMessage, variant: "destructive" });
       } finally {
         setIsLoadingItems(false);
       }
     };
     loadItems();
   }, [toast]);
+
+  useEffect(() => {
+    setCurrentYear(new Date().getFullYear());
+  }, []);
 
   const handleAddItemClick = () => {
     setEditingItem(undefined);
@@ -58,7 +65,8 @@ export default function HomePage() {
       setWardrobeItems(items);
     } catch (error) {
        console.error("Failed to refresh wardrobe items:", error);
-       toast({ title: "Error", description: "No se pudieron actualizar los artículos del armario.", variant: "destructive" });
+       const errorMessage = error instanceof Error ? error.message : "No se pudieron actualizar los artículos del armario.";
+       toast({ title: "Error", description: errorMessage, variant: "destructive" });
     }
   }
 
@@ -188,7 +196,7 @@ export default function HomePage() {
       </AlertDialog>
       
       <footer className="text-center py-6 border-t text-sm text-muted-foreground">
-        <p>&copy; {new Date().getFullYear()} ArmarioIA. Todos los derechos reservados.</p>
+        <p>&copy; {currentYear} ArmarioIA. Todos los derechos reservados.</p>
       </footer>
     </div>
   );
