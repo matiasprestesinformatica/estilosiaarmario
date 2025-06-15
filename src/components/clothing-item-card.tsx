@@ -1,3 +1,4 @@
+
 "use client";
 
 import Image from 'next/image';
@@ -6,31 +7,69 @@ import { es } from 'date-fns/locale';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Edit3, Trash2, CalendarDays } from 'lucide-react';
+import { Checkbox } from "@/components/ui/checkbox";
+import { Edit3, Trash2, CalendarDays, CheckSquare, Square } from 'lucide-react';
 import type { ClothingItem } from '@/lib/types';
 import { CATEGORIES } from '@/lib/constants';
+import { cn } from '@/lib/utils';
 
 interface ClothingItemCardProps {
   item: ClothingItem;
   onEdit: (item: ClothingItem) => void;
   onDelete: (item: ClothingItem) => void;
+  isSelected?: boolean;
+  onSelectToggle?: (itemId: string) => void;
+  isSelectionMode?: boolean;
 }
 
-export function ClothingItemCard({ item, onEdit, onDelete }: ClothingItemCardProps) {
+export function ClothingItemCard({ 
+  item, 
+  onEdit, 
+  onDelete, 
+  isSelected, 
+  onSelectToggle,
+  isSelectionMode = false 
+}: ClothingItemCardProps) {
   const categoryInfo = CATEGORIES.find(cat => cat.value === item.category);
   const CategoryIcon = categoryInfo?.icon;
 
+  const handleCardClick = () => {
+    if (isSelectionMode && onSelectToggle) {
+      onSelectToggle(item.id);
+    }
+    // If not in selection mode, card click does nothing extra,
+    // or you could implement a detail view navigation here.
+  };
+
+
   return (
-    <Card className="flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-shadow duration-300 ease-in-out">
-      <CardHeader className="p-4">
-        <div className="relative w-full h-60 rounded-t-md overflow-hidden">
+    <Card 
+      className={cn(
+        "flex flex-col overflow-hidden shadow-lg hover:shadow-xl transition-all duration-300 ease-in-out",
+        isSelectionMode && "cursor-pointer",
+        isSelected && isSelectionMode && "ring-2 ring-primary border-primary"
+      )}
+      onClick={handleCardClick}
+    >
+      <CardHeader className="p-0 relative">
+        {isSelectionMode && onSelectToggle && (
+          <div className="absolute top-2 right-2 z-10 bg-background/70 rounded-full p-1">
+            <Checkbox
+              checked={isSelected}
+              onCheckedChange={() => onSelectToggle(item.id)}
+              aria-label={`Seleccionar ${item.name}`}
+              className="h-5 w-5"
+            />
+          </div>
+        )}
+        <div className="relative w-full h-60">
           <Image
             src={item.imageUrl || "https://placehold.co/400x300.png"}
             alt={item.name}
             layout="fill"
             objectFit="cover"
             data-ai-hint={`${item.category} clothing`}
-            className="transition-transform duration-300 group-hover:scale-105"
+            className="rounded-t-md transition-transform duration-300 group-hover:scale-105"
           />
         </div>
       </CardHeader>
@@ -51,11 +90,11 @@ export function ClothingItemCard({ item, onEdit, onDelete }: ClothingItemCardPro
         </div>
       </CardContent>
       <CardFooter className="p-4 border-t flex justify-end gap-2">
-        <Button variant="outline" size="sm" onClick={() => onEdit(item)} aria-label={`Editar ${item.name}`}>
+        <Button variant="outline" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(item);}} aria-label={`Editar ${item.name}`}>
           <Edit3 className="h-4 w-4 mr-1 md:mr-2" />
           <span className="hidden md:inline">Editar</span>
         </Button>
-        <Button variant="destructive" size="sm" onClick={() => onDelete(item)} aria-label={`Eliminar ${item.name}`}>
+        <Button variant="destructive" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(item);}} aria-label={`Eliminar ${item.name}`}>
           <Trash2 className="h-4 w-4 mr-1 md:mr-2" />
           <span className="hidden md:inline">Eliminar</span>
         </Button>

@@ -1,5 +1,6 @@
+
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -10,9 +11,29 @@ generator client {
 model ClothingItem {
   id          String    @id @default(cuid())
   name        String
-  category    String    // Cambiado de Enum a String
+  category    String    // Was enum, changed to String due to SQLite limitations
   imageUrl    String
   description String?
   dateAdded   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+  outfits     Outfit[]  @relation("OutfitClothingItems")
+}
+
+model Outfit {
+  id            String          @id @default(cuid())
+  name          String
+  clothingItems ClothingItem[]  @relation("OutfitClothingItems")
+  plannedDates  PlannedOutfit[]
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+}
+
+model PlannedOutfit {
+  id        String   @id @default(cuid())
+  date      DateTime // Represents the specific date (YYYY-MM-DD at midnight UTC)
+  outfitId  String
+  outfit    Outfit   @relation(fields: [outfitId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([date]) // Assuming single user, one outfit per day.
 }
