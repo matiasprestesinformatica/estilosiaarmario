@@ -1,3 +1,7 @@
+// This file will be replaced by navbar.tsx
+// Keeping it temporarily to avoid deletion error if no other file is changed first.
+// Content will be effectively new in navbar.tsx.
+"use client";
 import { APP_NAME, APP_ICON } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
@@ -7,7 +11,7 @@ interface SiteHeaderProps {
 }
 
 export function SiteHeader({ onAddItemClick }: SiteHeaderProps) {
-  const AppIcon = APP_ICON || Shirt; // Default icon if not specified
+  const AppIcon = APP_ICON || PlusCircle; // Default icon if not specified
   return (
     <header className="py-6 px-4 md:px-8 border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
       <div className="container mx-auto flex items-center justify-between">

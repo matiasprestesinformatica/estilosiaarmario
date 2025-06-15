@@ -1,0 +1,105 @@
+
+"use client";
+
+import Link from 'next/link';
+import { APP_NAME, APP_ICON } from '@/lib/constants';
+import { Button } from '@/components/ui/button';
+import { PlusCircle, UserCircle2, Menu } from 'lucide-react';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { useState } from 'react';
+
+interface NavbarProps {
+  onAddItemClick: () => void;
+  activeTab: string;
+  onTabChange: (tab: string) => void;
+}
+
+export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) {
+  const AppIcon = APP_ICON || UserCircle2; // Default icon if not specified
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const navLinks = [
+    { label: "Mi Armario", value: "wardrobe" },
+    { label: "Mis Atuendos", value: "outfits" },
+    { label: "Planificador", value: "planner" },
+  ];
+
+  const handleMobileLinkClick = (tab: string) => {
+    onTabChange(tab);
+    setIsMobileMenuOpen(false);
+  };
+
+  return (
+    <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
+      <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
+        {/* Left Section - Logo */}
+        <Link href="/" className="flex items-center gap-2">
+          <AppIcon className="h-7 w-7 text-primary" />
+          <span className="text-2xl font-headline font-bold tracking-tight">{APP_NAME}</span>
+        </Link>
+
+        {/* Center Section - Desktop Navigation */}
+        <div className="hidden md:flex items-center gap-1">
+          {navLinks.map((link) => (
+            <Button
+              key={link.value}
+              variant={activeTab === link.value ? "secondary" : "ghost"}
+              size="sm"
+              onClick={() => onTabChange(link.value)}
+              className={`font-medium ${activeTab === link.value ? 'text-primary' : 'text-muted-foreground'}`}
+            >
+              {link.label}
+            </Button>
+          ))}
+        </div>
+
+        {/* Right Section - Actions & Mobile Menu */}
+        <div className="flex items-center gap-2 md:gap-3">
+          <Button 
+            onClick={onAddItemClick} 
+            variant="outline" 
+            size="sm"
+            className="bg-accent hover:bg-accent/90 text-accent-foreground hover:text-accent-foreground"
+          >
+            <PlusCircle className="mr-0 md:mr-2 h-4 w-4" />
+            <span className="hidden md:inline">Agregar Artículo</span>
+          </Button>
+          <Button variant="ghost" size="icon" className="hidden md:inline-flex">
+            <UserCircle2 className="h-6 w-6" />
+            <span className="sr-only">Perfil de Usuario</span>
+          </Button>
+          
+          {/* Mobile Menu Trigger */}
+          <div className="md:hidden">
+            <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="icon">
+                  <Menu className="h-6 w-6" />
+                  <span className="sr-only">Abrir menú</span>
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-[280px] p-6 pt-10">
+                <div className="flex flex-col space-y-3">
+                  {navLinks.map((link) => (
+                    <Button
+                      key={link.value}
+                      variant={activeTab === link.value ? "secondary" : "ghost"}
+                      onClick={() => handleMobileLinkClick(link.value)}
+                      className={`w-full justify-start text-base ${activeTab === link.value ? 'text-primary font-semibold' : 'text-foreground'}`}
+                    >
+                      {link.label}
+                    </Button>
+                  ))}
+                  <hr className="my-3"/>
+                  <Button variant="ghost" className="w-full justify-start text-base text-foreground">
+                    <UserCircle2 className="mr-2 h-5 w-5" /> Perfil
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
+        </div>
+      </div>
+    </nav>
+  );
+}

@@ -2,7 +2,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import { SiteHeader } from '@/components/site-header';
+import { Navbar } from '@/components/navbar'; // Updated import
+import { Footer } from '@/components/footer'; // New import
 import { ClothingItemCard } from '@/components/clothing-item-card';
 import { ClothingForm } from '@/components/clothing-form';
 import { CategoryFilter } from '@/components/category-filter';
@@ -13,10 +14,10 @@ import { ClothingItemCardSkeleton } from '@/components/clothing-item-card-skelet
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from "@/components/ui/sheet";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card"; // Added Card and CardContent imports
+import { Card, CardContent } from "@/components/ui/card";
 
 import type { ClothingItem, Category, Outfit } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -48,6 +49,7 @@ export default function HomePage() {
   const [isCreateOutfitDialogOpen, setIsCreateOutfitDialogOpen] = useState(false);
   const [newOutfitName, setNewOutfitName] = useState("");
   const [isMobileAISheetOpen, setIsMobileAISheetOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("wardrobe"); // For Navbar tab control
 
   useEffect(() => {
     setCurrentYear(new Date().getFullYear());
@@ -196,19 +198,24 @@ export default function HomePage() {
   
   const handleOutfitCreatedFromAI = () => {
     fetchOutfits();
-    setIsMobileAISheetOpen(false); // Close sheet if AI outfit is created from mobile
+    setIsMobileAISheetOpen(false); 
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <SiteHeader onAddItemClick={handleAddItemClick} />
+      <Navbar 
+        onAddItemClick={handleAddItemClick} 
+        activeTab={activeTab} 
+        onTabChange={setActiveTab} 
+      />
       
       <main className="flex-grow container mx-auto px-4 md:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2 space-y-6">
-            <Tabs defaultValue="wardrobe" className="w-full">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
-                <TabsList className="grid w-full sm:w-auto grid-cols-3 mb-2 sm:mb-0">
+                {/* TabsList is now primarily controlled by Navbar for desktop, but kept for visual structure or smaller screen use */}
+                 <TabsList className="grid w-full sm:w-auto grid-cols-3 mb-2 sm:mb-0">
                   <TabsTrigger value="wardrobe"><Shirt className="mr-1 sm:mr-2 h-4 w-4" />Mi Armario</TabsTrigger>
                   <TabsTrigger value="outfits"><Users className="mr-1 sm:mr-2 h-4 w-4" />Mis Atuendos</TabsTrigger>
                   <TabsTrigger value="planner"><CalendarDays className="mr-1 sm:mr-2 h-4 w-4" />Planificador</TabsTrigger>
@@ -232,7 +239,6 @@ export default function HomePage() {
                   </Sheet>
                 </div>
               </div>
-
 
               <TabsContent value="wardrobe">
                 <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 p-4 bg-card rounded-lg shadow">
@@ -266,8 +272,8 @@ export default function HomePage() {
                   </div>
                 )}
                 {isLoadingItems ? (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                    {Array.from({ length: 6 }).map((_, index) => (
+                  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    {Array.from({ length: 8 }).map((_, index) => ( // Increased skeleton items
                       <ClothingItemCardSkeleton key={index} />
                     ))}
                   </div>
@@ -328,7 +334,7 @@ export default function HomePage() {
           </div>
 
           <div className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-24 space-y-6">
+            <div className="sticky top-24 space-y-6"> {/* Adjusted top for sticky navbar */}
                <StyleSuggestionSection wardrobe={wardrobeItems} onOutfitCreated={fetchOutfits} />
             </div>
           </div>
@@ -406,9 +412,7 @@ export default function HomePage() {
         </AlertDialogContent>
       </AlertDialog>
       
-      <footer className="text-center py-6 border-t text-sm text-muted-foreground">
-        <p>&copy; {currentYear ?? ''} ArmarioIA. Todos los derechos reservados.</p>
-      </footer>
+      <Footer currentYear={currentYear} />
     </div>
   );
 }
