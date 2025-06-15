@@ -26,6 +26,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import type { ClothingItem, Category } from "@/lib/types";
 import { CATEGORIES } from "@/lib/constants";
 import { useEffect } from "react";
+import { Loader2 } from "lucide-react";
 
 const clothingItemSchema = z.object({
   name: z.string().min(2, { message: "El nombre debe tener al menos 2 caracteres." }).max(50, { message: "El nombre no puede exceder los 50 caracteres." }),
@@ -43,9 +44,10 @@ interface ClothingFormProps {
   onClose: () => void;
   onSubmit: (data: ClothingFormValues, id?: string) => void;
   initialData?: ClothingItem;
+  isPending?: boolean;
 }
 
-export function ClothingForm({ isOpen, onClose, onSubmit, initialData }: ClothingFormProps) {
+export function ClothingForm({ isOpen, onClose, onSubmit, initialData, isPending }: ClothingFormProps) {
   const form = useForm<ClothingFormValues>({
     resolver: zodResolver(clothingItemSchema),
     defaultValues: initialData ? {
@@ -62,31 +64,39 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData }: Clothin
   });
 
   useEffect(() => {
-    if (initialData) {
-      form.reset({
-        name: initialData.name,
-        category: initialData.category,
-        imageUrl: initialData.imageUrl,
-        description: initialData.description || "",
-      });
-    } else {
-      form.reset({
-        name: "",
-        category: undefined,
-        imageUrl: "",
-        description: "",
-      });
+    if (isOpen) { // Only reset form when dialog opens or initialData changes while open
+      if (initialData) {
+        form.reset({
+          name: initialData.name,
+          category: initialData.category,
+          imageUrl: initialData.imageUrl,
+          description: initialData.description || "",
+        });
+      } else {
+        form.reset({
+          name: "",
+          category: undefined,
+          imageUrl: "https://placehold.co/400x300.png", // Default placeholder
+          description: "",
+        });
+      }
     }
   }, [initialData, form, isOpen]);
 
 
   const handleSubmit = (values: ClothingFormValues) => {
     onSubmit(values, initialData?.id);
-    form.reset(); // Reset form after submission
+    // Do not reset form here, onSubmit callback should handle closing and resetting state
+  };
+  
+  const handleOpenChange = (open: boolean) => {
+    if (!open) {
+      onClose();
+    }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[425px] md:sm:max-w-[600px] bg-card text-card-foreground">
         <DialogHeader>
           <DialogTitle className="font-headline text-2xl">
@@ -102,7 +112,7 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData }: Clothin
                 <FormItem>
                   <FormLabel>Nombre del Artículo</FormLabel>
                   <FormControl>
-                    <Input placeholder="Ej: Camisa de Lino Blanca" {...field} />
+                    <Input placeholder="Ej: Camisa de Lino Blanca" {...field} disabled={isPending} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -114,7 +124,7 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData }: Clothin
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Categoría</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value} disabled={isPending}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Selecciona una categoría" />
@@ -142,10 +152,10 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData }: Clothin
                 <FormItem>
                   <FormLabel>URL de la Imagen</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} />
+                    <Input placeholder="https://ejemplo.com/imagen.jpg" {...field} disabled={isPending} />
                   </FormControl>
                   <FormDescription>
-                    Asegúrate que la URL sea accesible públicamente.
+                    Asegúrate que la URL sea accesible públicamente. Puedes usar <a href="https://placehold.co/" target="_blank" rel="noopener noreferrer" className="underline">placehold.co</a> para imágenes de prueba.
                   </FormDescription>
                   <FormMessage />
                 </FormItem>
@@ -162,6 +172,7 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData }: Clothin
                       placeholder="Ej: Ideal para verano, tejido ligero..."
                       className="resize-none"
                       {...field}
+                      disabled={isPending}
                     />
                   </FormControl>
                    <FormDescription>
@@ -173,9 +184,10 @@ export function ClothingForm({ isOpen, onClose, onSubmit, initialData }: Clothin
             />
             <DialogFooter className="pt-4">
               <DialogClose asChild>
-                <Button type="button" variant="outline">Cancelar</Button>
+                <Button type="button" variant="outline" disabled={isPending}>Cancelar</Button>
               </DialogClose>
-              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground hover:text-accent-foreground">
+              <Button type="submit" className="bg-accent hover:bg-accent/90 text-accent-foreground hover:text-accent-foreground" disabled={isPending}>
+                {isPending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {initialData ? "Guardar Cambios" : "Agregar Artículo"}
               </Button>
             </DialogFooter>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useTransition } from 'react';
 import { SiteHeader } from '@/components/site-header';
 import { ClothingItemCard } from '@/components/clothing-item-card';
 import { ClothingForm } from '@/components/clothing-form';
@@ -9,15 +9,8 @@ import { StyleSuggestionSection } from '@/components/style-suggestion-section';
 import type { ClothingItem, Category } from '@/lib/types';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
-import { Smile } from 'lucide-react';
-
-// Sample initial data
-const initialItems: ClothingItem[] = [
-  { id: '1', name: 'Camisa de Algodón Azul', category: 'Tops', imageUrl: 'https://placehold.co/400x300.png', dateAdded: new Date(2023, 0, 15).toISOString(), description: 'Camisa azul de algodón, perfecta para uso casual.' },
-  { id: '2', name: 'Vaqueros Slim Fit', category: 'Bottoms', imageUrl: 'https://placehold.co/400x300.png', dateAdded: new Date(2023, 1, 20).toISOString(), description: 'Vaqueros de corte slim, color azul oscuro.' },
-  { id: '3', name: 'Zapatillas Blancas Urbanas', category: 'Shoes', imageUrl: 'https://placehold.co/400x300.png', dateAdded: new Date(2023, 2, 5).toISOString(), description: 'Zapatillas de cuero sintético blancas, estilo urbano.' },
-];
-
+import { Smile, Loader2 } from 'lucide-react';
+import { getWardrobeItems, addClothingItem, updateClothingItem, deleteClothingItem, type AddClothingItemData, type UpdateClothingItemData } from '@/app/actions/wardrobeActions';
 
 export default function HomePage() {
   const [wardrobeItems, setWardrobeItems] = useState<ClothingItem[]>([]);
@@ -26,22 +19,24 @@ export default function HomePage() {
   const [itemToDelete, setItemToDelete] = useState<ClothingItem | undefined>(undefined);
   const [selectedCategory, setSelectedCategory] = useState<Category | 'all'>('all');
   const { toast } = useToast();
+  const [isPending, startTransition] = useTransition();
+  const [isLoadingItems, setIsLoadingItems] = useState(true);
 
-  // Load items from local storage or use initialItems
   useEffect(() => {
-    const storedItems = localStorage.getItem('armarioIAItems');
-    if (storedItems) {
-      setWardrobeItems(JSON.parse(storedItems));
-    } else {
-      setWardrobeItems(initialItems);
-    }
-  }, []);
-
-  // Save items to local storage whenever they change
-  useEffect(() => {
-    localStorage.setItem('armarioIAItems', JSON.stringify(wardrobeItems));
-  }, [wardrobeItems]);
-
+    const loadItems = async () => {
+      setIsLoadingItems(true);
+      try {
+        const items = await getWardrobeItems();
+        setWardrobeItems(items);
+      } catch (error) {
+        console.error("Failed to load wardrobe items:", error);
+        toast({ title: "Error", description: "No se pudieron cargar los artículos del armario.", variant: "destructive" });
+      } finally {
+        setIsLoadingItems(false);
+      }
+    };
+    loadItems();
+  }, [toast]);
 
   const handleAddItemClick = () => {
     setEditingItem(undefined);
@@ -57,30 +52,50 @@ export default function HomePage() {
     setItemToDelete(item);
   };
 
+  const fetchItemsAndUpdateState = async () => {
+    try {
+      const items = await getWardrobeItems();
+      setWardrobeItems(items);
+    } catch (error) {
+       console.error("Failed to refresh wardrobe items:", error);
+       toast({ title: "Error", description: "No se pudieron actualizar los artículos del armario.", variant: "destructive" });
+    }
+  }
+
   const confirmDeleteItem = () => {
     if (itemToDelete) {
-      setWardrobeItems(prevItems => prevItems.filter(item => item.id !== itemToDelete.id));
-      toast({ title: "Artículo Eliminado", description: `"${itemToDelete.name}" ha sido eliminado de tu armario.` });
-      setItemToDelete(undefined);
+      startTransition(async () => {
+        try {
+          await deleteClothingItem(itemToDelete.id!);
+          toast({ title: "Artículo Eliminado", description: `"${itemToDelete.name}" ha sido eliminado de tu armario.` });
+          await fetchItemsAndUpdateState();
+          setItemToDelete(undefined);
+        } catch (error) {
+          console.error('Error deleting item:', error);
+          toast({ title: "Error al Eliminar", description: (error as Error).message || "No se pudo eliminar el artículo.", variant: "destructive" });
+        }
+      });
     }
   };
 
   const handleFormSubmit = (data: Omit<ClothingItem, 'id' | 'dateAdded'>, id?: string) => {
-    if (id) { // Editing existing item
-      setWardrobeItems(prevItems =>
-        prevItems.map(item => (item.id === id ? { ...item, ...data } : item))
-      );
-      toast({ title: "Artículo Actualizado", description: `"${data.name}" ha sido actualizado.` });
-    } else { // Adding new item
-      const newItem: ClothingItem = {
-        ...data,
-        id: crypto.randomUUID(),
-        dateAdded: new Date().toISOString(),
-      };
-      setWardrobeItems(prevItems => [newItem, ...prevItems]);
-      toast({ title: "Artículo Agregado", description: `"${newItem.name}" ha sido agregado a tu armario.` });
-    }
-    setIsFormOpen(false);
+    startTransition(async () => {
+      try {
+        if (id) { // Editing existing item
+          await updateClothingItem(id, data as UpdateClothingItemData);
+          toast({ title: "Artículo Actualizado", description: `"${data.name}" ha sido actualizado.` });
+        } else { // Adding new item
+          await addClothingItem(data as AddClothingItemData);
+          toast({ title: "Artículo Agregado", description: `"${data.name}" ha sido agregado a tu armario.` });
+        }
+        await fetchItemsAndUpdateState();
+        setIsFormOpen(false);
+        setEditingItem(undefined);
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        toast({ title: "Error al Guardar", description: (error as Error).message || "No se pudo guardar el artículo.", variant: "destructive" });
+      }
+    });
   };
   
   const filteredItems = useMemo(() => {
@@ -105,8 +120,11 @@ export default function HomePage() {
                 onCategoryChange={setSelectedCategory}
               />
             </div>
-
-            {filteredItems.length > 0 ? (
+            {isPending || isLoadingItems ? (
+              <div className="flex justify-center items-center py-12">
+                <Loader2 className="h-16 w-16 animate-spin text-primary" />
+              </div>
+            ) : filteredItems.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {filteredItems.map(item => (
                   <ClothingItemCard
@@ -141,9 +159,10 @@ export default function HomePage() {
 
       <ClothingForm
         isOpen={isFormOpen}
-        onClose={() => setIsFormOpen(false)}
+        onClose={() => {setIsFormOpen(false); setEditingItem(undefined);}}
         onSubmit={handleFormSubmit}
         initialData={editingItem}
+        isPending={isPending}
       />
 
       <AlertDialog open={!!itemToDelete} onOpenChange={() => setItemToDelete(undefined)}>
@@ -155,8 +174,13 @@ export default function HomePage() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setItemToDelete(undefined)}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDeleteItem} className="bg-destructive hover:bg-destructive/90">
+            <AlertDialogCancel onClick={() => setItemToDelete(undefined)} disabled={isPending}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteItem} 
+              className="bg-destructive hover:bg-destructive/90"
+              disabled={isPending}
+            >
+              {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -1,0 +1,18 @@
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model ClothingItem {
+  id          String    @id @default(cuid())
+  name        String
+  category    String    // Cambiado de Enum a String
+  imageUrl    String
+  description String?
+  dateAdded   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
