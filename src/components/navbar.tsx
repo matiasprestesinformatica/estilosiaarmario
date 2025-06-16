@@ -30,6 +30,7 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
     if (pathname === '/') {
       onTabChange(tabValue);
     }
+    // Navigation to "/" is handled by Link component itself
     setIsMobileMenuOpen(false);
   };
   
@@ -37,6 +38,7 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
      if (pathname === '/') { 
         onTabChange(tabValue);
      }
+     // If pathname !== '/', Button's child Link handles navigation
   };
 
 
@@ -46,7 +48,7 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
         <Link
           href="/"
           className="flex items-center gap-2"
-          onClick={() => pathname !== '/' && setIsMobileMenuOpen(false) }
+          onClick={() => { if (pathname !== '/') setIsMobileMenuOpen(false); } }
         >
           <AppIcon className="h-7 w-7 text-primary" />
           <span className="text-2xl font-headline font-bold tracking-tight">{APP_NAME}</span>
@@ -62,19 +64,20 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
               className={`font-medium ${ (pathname === '/' && activeTab === link.value) ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'}`}
               asChild={pathname !== '/'}
             >
-              {pathname !== '/' ? <Link href="/">{link.label}</Link> : link.label}
+              {pathname !== '/' ? <Link href="/">{link.label}</Link> : <span>{link.label}</span>}
             </Button>
           ))}
-          <Link href="/dashboard" asChild>
-            <Button
-              variant={pathname === "/dashboard" ? "secondary" : "ghost"}
-              size="sm"
-              className={`font-medium ${pathname === "/dashboard" ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'}`}
-            >
+          <Button
+            variant={pathname === "/dashboard" ? "secondary" : "ghost"}
+            size="sm"
+            className={`font-medium ${pathname === "/dashboard" ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'}`}
+            asChild
+          >
+            <Link href="/dashboard">
               <LayoutDashboard className="mr-1 h-4 w-4" />
               Dashboard
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
 
         <div className="flex items-center gap-2 md:gap-3">
@@ -102,31 +105,31 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
               </SheetTrigger>
               <SheetContent side="right" className="w-[280px] p-6 pt-10">
                 <div className="flex flex-col space-y-3">
-                  {mainPageNavLinks.map((link) => (
-                     <Link 
-                        href="/" 
-                        key={link.value} 
-                        onClick={() => handleMobileLinkClick(link.value)}
-                        asChild
-                      >
-                        <Button
-                          variant={(pathname === '/' && activeTab === link.value) ? "secondary" : "ghost"}
-                          className={`w-full justify-start text-base ${ (pathname === '/' && activeTab === link.value) ? 'text-primary font-semibold' : 'text-foreground'}`}
-                        >
-                          {link.label}
-                        </Button>
-                    </Link>
-                  ))}
-                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} asChild>
+                  {mainPageNavLinks.map((navLink) => (
                     <Button
-                         variant={pathname === "/dashboard" ? "secondary" : "ghost"}
-                         className={`w-full justify-start text-base ${ pathname === "/dashboard" ? 'text-primary font-semibold' : 'text-foreground'}`}
+                      key={navLink.value}
+                      variant={(pathname === '/' && activeTab === navLink.value) ? "secondary" : "ghost"}
+                      className={`w-full justify-start text-base ${ (pathname === '/' && activeTab === navLink.value) ? 'text-primary font-semibold' : 'text-foreground'}`}
+                      onClick={() => handleMobileLinkClick(navLink.value)}
+                      asChild
                     >
-                        <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard
+                      <Link href="/">
+                        {navLink.label}
+                      </Link>
                     </Button>
-                  </Link>
+                  ))}
+                  <Button
+                       variant={pathname === "/dashboard" ? "secondary" : "ghost"}
+                       className={`w-full justify-start text-base ${ pathname === "/dashboard" ? 'text-primary font-semibold' : 'text-foreground'}`}
+                       onClick={() => setIsMobileMenuOpen(false)}
+                       asChild
+                  >
+                      <Link href="/dashboard">
+                          <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard
+                      </Link>
+                  </Button>
                   <hr className="my-3"/>
-                  <Button variant="ghost" className="w-full justify-start text-base text-foreground">
+                  <Button variant="ghost" className="w-full justify-start text-base text-foreground" onClick={() => setIsMobileMenuOpen(false)}>
                     <UserCircle2 className="mr-2 h-5 w-5" /> Perfil
                   </Button>
                 </div>
