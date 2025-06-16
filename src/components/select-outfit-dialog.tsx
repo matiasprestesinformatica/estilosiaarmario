@@ -67,17 +67,25 @@ export function SelectOutfitDialog({ isOpen, onClose, onSelectOutfit, selectedDa
                 <Label 
                   key={outfit.id} 
                   htmlFor={outfit.id} 
-                  className="flex items-center space-x-3 p-3 border rounded-md hover:bg-secondary/50 cursor-pointer transition-colors has-[:checked]:bg-secondary has-[:checked]:border-primary"
+                  className="flex items-start space-x-3 p-3 border rounded-md hover:bg-secondary/50 cursor-pointer transition-colors has-[:checked]:bg-secondary has-[:checked]:border-primary"
                 >
-                  <RadioGroupItem value={outfit.id} id={outfit.id} />
-                  <div className="flex-shrink-0 flex space-x-1">
-                    {outfit.clothingItems.slice(0, 3).map(item => (
-                      <div key={item.id} className="relative w-10 h-14 rounded-sm overflow-hidden border">
-                        <Image src={item.imageUrl} alt={item.name} layout="fill" objectFit="cover" />
-                      </div>
-                    ))}
+                  <RadioGroupItem value={outfit.id} id={outfit.id} className="mt-1" />
+                  <div className="flex flex-col flex-grow">
+                    <span className="font-medium text-sm mb-2">{outfit.name}</span>
+                    <div className="flex flex-wrap gap-1">
+                      {outfit.clothingItems.map(item => (
+                        <div key={item.id} className="relative w-10 h-14 rounded-sm overflow-hidden border">
+                          <Image 
+                            src={item.imageUrl || "https://placehold.co/40x56.png"} 
+                            alt={item.name} 
+                            layout="fill" 
+                            objectFit="cover" 
+                            data-ai-hint={`${item.category} clothing`}
+                          />
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <span className="font-medium text-sm">{outfit.name}</span>
                 </Label>
               ))}
             </RadioGroup>
@@ -99,3 +107,4 @@ export function SelectOutfitDialog({ isOpen, onClose, onSelectOutfit, selectedDa
     </Dialog>
   );
 }
+
