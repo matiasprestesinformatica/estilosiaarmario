@@ -39,7 +39,7 @@ export function Footer({ currentYear }: FooterProps) {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="text-muted-foreground hover:text-primary transition-colors"
-                legacyBehavior>
+              >
                 <social.icon className="h-6 w-6" />
                 <span className="sr-only">{social.name}</span>
               </Link>
@@ -53,7 +53,7 @@ export function Footer({ currentYear }: FooterProps) {
                 key={link.name}
                 href={link.href}
                 className="hover:text-primary hover:underline transition-colors"
-                legacyBehavior>
+              >
                 {link.name}
               </Link>
             ))}
