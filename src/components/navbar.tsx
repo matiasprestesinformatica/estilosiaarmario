@@ -11,8 +11,8 @@ import { usePathname } from 'next/navigation';
 
 interface NavbarProps {
   onAddItemClick: () => void;
-  activeTab: string; // Active tab on the main page ('/', e.g. 'wardrobe')
-  onTabChange: (tab: string) => void; // To change tabs on the main page
+  activeTab: string; 
+  onTabChange: (tab: string) => void; 
 }
 
 export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) {
@@ -27,23 +27,15 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
   ];
 
   const handleMobileLinkClick = (tabValue: string) => {
-    // For main page tabs, change tab and close menu
     if (pathname === '/') {
       onTabChange(tabValue);
     }
-    // If navigating away (e.g. to / from /dashboard), Link component handles it.
-    // We always close the mobile menu on click.
     setIsMobileMenuOpen(false);
   };
   
   const handleDesktopTabClick = (tabValue: string) => {
-     if (pathname === '/') { // Only change tabs if on the main page
+     if (pathname === '/') { 
         onTabChange(tabValue);
-     } else {
-        // If on another page like /dashboard, clicking a main page tab link should navigate to '/' and set the tab
-        // This requires router.push or Link component. For simplicity with Button, we might need Link asChild.
-        // For now, let's assume user clicks Dashboard to go to dashboard, and these tabs are for main page.
-        // A full solution would involve router.push('/') then onTabChange or Link components.
      }
   };
 
@@ -53,13 +45,11 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
         <Link
           href="/"
+          className="flex items-center gap-2"
           onClick={() => pathname !== '/' && setIsMobileMenuOpen(false) }
-          legacyBehavior
         >
-          <a className="flex items-center gap-2">
-            <AppIcon className="h-7 w-7 text-primary" />
-            <span className="text-2xl font-headline font-bold tracking-tight">{APP_NAME}</span>
-          </a>
+          <AppIcon className="h-7 w-7 text-primary" />
+          <span className="text-2xl font-headline font-bold tracking-tight">{APP_NAME}</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -72,15 +62,14 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
               className={`font-medium ${ (pathname === '/' && activeTab === link.value) ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'}`}
               asChild={pathname !== '/'}
             >
-              {pathname !== '/' ? <Link href="/" legacyBehavior>{link.label}</Link> : link.label}
+              {pathname !== '/' ? <Link href="/">{link.label}</Link> : link.label}
             </Button>
           ))}
-          <Link href="/dashboard" passHref legacyBehavior>
+          <Link href="/dashboard" asChild>
             <Button
               variant={pathname === "/dashboard" ? "secondary" : "ghost"}
               size="sm"
               className={`font-medium ${pathname === "/dashboard" ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'}`}
-              as="a" // Ensure Button renders as an <a> tag when used with legacyBehavior Link
             >
               <LayoutDashboard className="mr-1 h-4 w-4" />
               Dashboard
@@ -116,25 +105,22 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
                   {mainPageNavLinks.map((link) => (
                      <Link 
                         href="/" 
-                        passHref 
-                        legacyBehavior 
                         key={link.value} 
                         onClick={() => handleMobileLinkClick(link.value)}
+                        asChild
                       >
                         <Button
                           variant={(pathname === '/' && activeTab === link.value) ? "secondary" : "ghost"}
                           className={`w-full justify-start text-base ${ (pathname === '/' && activeTab === link.value) ? 'text-primary font-semibold' : 'text-foreground'}`}
-                          as="a" // Ensure Button renders as an <a> tag
                         >
                           {link.label}
                         </Button>
                     </Link>
                   ))}
-                  <Link href="/dashboard" passHref legacyBehavior onClick={() => setIsMobileMenuOpen(false)}>
+                  <Link href="/dashboard" onClick={() => setIsMobileMenuOpen(false)} asChild>
                     <Button
                          variant={pathname === "/dashboard" ? "secondary" : "ghost"}
                          className={`w-full justify-start text-base ${ pathname === "/dashboard" ? 'text-primary font-semibold' : 'text-foreground'}`}
-                         as="a" // Ensure Button renders as an <a> tag
                     >
                         <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard
                     </Button>
