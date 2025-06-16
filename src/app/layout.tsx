@@ -5,9 +5,6 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { useState, useEffect } from 'react';
 
-// Metadata cannot be exported from a Client Component layout.
-// We'll include essential head tags directly.
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,7 +16,6 @@ export default function RootLayout({
     setIsMounted(true);
   }, []);
 
-  // Consistent head content for both server/initial client and post-mount client.
   const headContent = (
     <head>
       <meta charSet="utf-8" />
@@ -34,24 +30,12 @@ export default function RootLayout({
     </head>
   );
 
-  if (!isMounted) {
-    return (
-      <html lang="es">
-        {headContent}
-        <body className="font-body antialiased">
-          {/* Optional: You can put a global loading spinner here if desired */}
-          {/* For now, rendering nothing in body until mounted */}
-        </body>
-      </html>
-    );
-  }
-
   return (
     <html lang="es">
       {headContent}
       <body className="font-body antialiased">
         {children}
-        <Toaster />
+        {isMounted && <Toaster />}
       </body>
     </html>
   );
