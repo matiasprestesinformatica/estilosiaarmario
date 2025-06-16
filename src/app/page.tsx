@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useTransition } from 'react';
-import { Navbar } from '@/components/navbar'; // Updated import
-import { Footer } from '@/components/footer'; // New import
+import { Navbar } from '@/components/navbar';
+import { Footer } from '@/components/footer';
 import { ClothingItemCard } from '@/components/clothing-item-card';
 import { ClothingForm } from '@/components/clothing-form';
 import { CategoryFilter } from '@/components/category-filter';
@@ -49,9 +49,12 @@ export default function HomePage() {
   const [isCreateOutfitDialogOpen, setIsCreateOutfitDialogOpen] = useState(false);
   const [newOutfitName, setNewOutfitName] = useState("");
   const [isMobileAISheetOpen, setIsMobileAISheetOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("wardrobe"); // For Navbar tab control
+  const [activeTab, setActiveTab] = useState("wardrobe");
+
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
     setCurrentYear(new Date().getFullYear());
   }, []);
 
@@ -84,9 +87,12 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    fetchWardrobeItems();
-    fetchOutfits();
-  }, [toast]);
+    // Fetch initial data only on the client after mount
+    if (isClient) {
+      fetchWardrobeItems();
+      fetchOutfits();
+    }
+  }, [isClient]); // Effect now depends on isClient
 
   const handleAddItemClick = () => {
     setEditingItem(undefined);
@@ -209,137 +215,142 @@ export default function HomePage() {
         onTabChange={setActiveTab} 
       />
       
-      <main className="flex-grow container mx-auto px-4 md:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <div className="lg:col-span-2 space-y-6">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
-                {/* TabsList is now primarily controlled by Navbar for desktop, but kept for visual structure or smaller screen use */}
-                 <TabsList className="grid w-full sm:w-auto grid-cols-3 mb-2 sm:mb-0">
-                  <TabsTrigger value="wardrobe"><Shirt className="mr-1 sm:mr-2 h-4 w-4" />Mi Armario</TabsTrigger>
-                  <TabsTrigger value="outfits"><Users className="mr-1 sm:mr-2 h-4 w-4" />Mis Atuendos</TabsTrigger>
-                  <TabsTrigger value="planner"><CalendarDays className="mr-1 sm:mr-2 h-4 w-4" />Planificador</TabsTrigger>
-                </TabsList>
-                <div className="lg:hidden">
-                  <Sheet open={isMobileAISheetOpen} onOpenChange={setIsMobileAISheetOpen}>
-                    <SheetTrigger asChild>
-                      <Button variant="outline" size="sm">
-                        <Lightbulb className="mr-2 h-4 w-4" /> Sugerencias IA
+      {isClient ? (
+        <main className="flex-grow container mx-auto px-4 md:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div className="lg:col-span-2 space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-2">
+                  <TabsList className="grid w-full sm:w-auto grid-cols-3 mb-2 sm:mb-0">
+                    <TabsTrigger value="wardrobe"><Shirt className="mr-1 sm:mr-2 h-4 w-4" />Mi Armario</TabsTrigger>
+                    <TabsTrigger value="outfits"><Users className="mr-1 sm:mr-2 h-4 w-4" />Mis Atuendos</TabsTrigger>
+                    <TabsTrigger value="planner"><CalendarDays className="mr-1 sm:mr-2 h-4 w-4" />Planificador</TabsTrigger>
+                  </TabsList>
+                  <div className="lg:hidden">
+                    <Sheet open={isMobileAISheetOpen} onOpenChange={setIsMobileAISheetOpen}>
+                      <SheetTrigger asChild>
+                        <Button variant="outline" size="sm">
+                          <Lightbulb className="mr-2 h-4 w-4" /> Sugerencias IA
+                        </Button>
+                      </SheetTrigger>
+                      <SheetContent side="bottom" className="h-[80vh]">
+                         <SheetHeader className="mb-4">
+                           <SheetTitle>Sugerencias de Estilo IA</SheetTitle>
+                           <SheetDescription>
+                             Obtén ideas de atuendos basadas en tu armario actual.
+                           </SheetDescription>
+                         </SheetHeader>
+                        <StyleSuggestionSection wardrobe={wardrobeItems} onOutfitCreated={handleOutfitCreatedFromAI} />
+                      </SheetContent>
+                    </Sheet>
+                  </div>
+                </div>
+
+                <TabsContent value="wardrobe">
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 p-4 bg-card rounded-lg shadow">
+                    <h2 className="text-2xl font-headline">Mi Armario</h2>
+                    <div className="flex flex-col xs:flex-row items-center gap-2 w-full xs:w-auto">
+                      <Button 
+                        variant={isSelectionMode ? "default" : "outline"} 
+                        size="sm" 
+                        onClick={() => {
+                          setIsSelectionMode(!isSelectionMode);
+                          if (isSelectionMode) setSelectedItemIdsForOutfit(new Set());
+                        }}
+                        className="w-full xs:w-auto"
+                      >
+                        {isSelectionMode ? "Cancelar Selección" : "Seleccionar para Atuendo"}
                       </Button>
-                    </SheetTrigger>
-                    <SheetContent side="bottom" className="h-[80vh]">
-                       <SheetHeader className="mb-4">
-                         <SheetTitle>Sugerencias de Estilo IA</SheetTitle>
-                         <SheetDescription>
-                           Obtén ideas de atuendos basadas en tu armario actual.
-                         </SheetDescription>
-                       </SheetHeader>
-                      <StyleSuggestionSection wardrobe={wardrobeItems} onOutfitCreated={handleOutfitCreatedFromAI} />
-                    </SheetContent>
-                  </Sheet>
-                </div>
-              </div>
-
-              <TabsContent value="wardrobe">
-                <div className="flex flex-col sm:flex-row justify-between items-center gap-4 mb-6 p-4 bg-card rounded-lg shadow">
-                  <h2 className="text-2xl font-headline">Mi Armario</h2>
-                  <div className="flex flex-col xs:flex-row items-center gap-2 w-full xs:w-auto">
-                    <Button 
-                      variant={isSelectionMode ? "default" : "outline"} 
-                      size="sm" 
-                      onClick={() => {
-                        setIsSelectionMode(!isSelectionMode);
-                        if (isSelectionMode) setSelectedItemIdsForOutfit(new Set());
-                      }}
-                      className="w-full xs:w-auto"
-                    >
-                      {isSelectionMode ? "Cancelar Selección" : "Seleccionar para Atuendo"}
-                    </Button>
-                    <CategoryFilter 
-                      selectedCategory={selectedCategory}
-                      onCategoryChange={setSelectedCategory}
-                    />
-                  </div>
-                </div>
-                {isSelectionMode && selectedItemIdsForOutfit.size > 0 && (
-                  <div className="mb-4 p-3 bg-primary/10 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
-                    <p className="text-sm font-medium text-primary-foreground">
-                      {selectedItemIdsForOutfit.size} artículo(s) seleccionados.
-                    </p>
-                    <Button size="sm" onClick={() => setIsCreateOutfitDialogOpen(true)} className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
-                      <PackagePlus className="mr-2 h-4 w-4"/> Crear Atuendo
-                    </Button>
-                  </div>
-                )}
-                {isLoadingItems ? (
-                  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                    {Array.from({ length: 8 }).map((_, index) => ( // Increased skeleton items
-                      <ClothingItemCardSkeleton key={index} />
-                    ))}
-                  </div>
-                ) : filteredItems.length > 0 ? (
-                  <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
-                    {filteredItems.map(item => (
-                      <ClothingItemCard
-                        key={item.id}
-                        item={item}
-                        onEdit={handleEditItem}
-                        onDelete={handleDeleteItemPrompt}
-                        isSelected={selectedItemIdsForOutfit.has(item.id)}
-                        onSelectToggle={isSelectionMode ? toggleItemSelectionForOutfit : undefined}
-                        isSelectionMode={isSelectionMode}
+                      <CategoryFilter 
+                        selectedCategory={selectedCategory}
+                        onCategoryChange={setSelectedCategory}
                       />
-                    ))}
+                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <Smile className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-xl text-muted-foreground font-headline">Tu armario está un poco vacío.</p>
-                    <p className="text-muted-foreground">
-                      {selectedCategory === 'all' ? "¡Agrega algunos artículos para empezar!" : `No hay artículos en la categoría "${selectedCategory}".`}
-                    </p>
-                  </div>
-                )}
-              </TabsContent>
+                  {isSelectionMode && selectedItemIdsForOutfit.size > 0 && (
+                    <div className="mb-4 p-3 bg-primary/10 rounded-lg flex flex-col sm:flex-row justify-between items-center gap-2">
+                      <p className="text-sm font-medium text-primary-foreground">
+                        {selectedItemIdsForOutfit.size} artículo(s) seleccionados.
+                      </p>
+                      <Button size="sm" onClick={() => setIsCreateOutfitDialogOpen(true)} className="bg-accent hover:bg-accent/90 text-accent-foreground w-full sm:w-auto">
+                        <PackagePlus className="mr-2 h-4 w-4"/> Crear Atuendo
+                      </Button>
+                    </div>
+                  )}
+                  {isLoadingItems ? (
+                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                      {Array.from({ length: 8 }).map((_, index) => (
+                        <ClothingItemCardSkeleton key={index} />
+                      ))}
+                    </div>
+                  ) : filteredItems.length > 0 ? (
+                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                      {filteredItems.map(item => (
+                        <ClothingItemCard
+                          key={item.id}
+                          item={item}
+                          onEdit={handleEditItem}
+                          onDelete={handleDeleteItemPrompt}
+                          isSelected={selectedItemIdsForOutfit.has(item.id)}
+                          onSelectToggle={isSelectionMode ? toggleItemSelectionForOutfit : undefined}
+                          isSelectionMode={isSelectionMode}
+                        />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Smile className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-xl text-muted-foreground font-headline">Tu armario está un poco vacío.</p>
+                      <p className="text-muted-foreground">
+                        {selectedCategory === 'all' ? "¡Agrega algunos artículos para empezar!" : `No hay artículos en la categoría "${selectedCategory}".`}
+                      </p>
+                    </div>
+                  )}
+                </TabsContent>
 
-              <TabsContent value="outfits">
-                <div className="flex justify-between items-center mb-6 p-4 bg-card rounded-lg shadow">
-                   <h2 className="text-2xl font-headline">Mis Atuendos (Lookbook)</h2>
-                </div>
-                {isLoadingOutfits ? (
-                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {Array.from({ length: 4 }).map((_, index) => (
-                       <Card key={index} className="h-60"><CardContent className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></CardContent></Card>
-                    ))}
+                <TabsContent value="outfits">
+                  <div className="flex justify-between items-center mb-6 p-4 bg-card rounded-lg shadow">
+                     <h2 className="text-2xl font-headline">Mis Atuendos (Lookbook)</h2>
                   </div>
-                ) : outfits.length > 0 ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {outfits.map(outfit => (
-                      <OutfitCard key={outfit.id} outfit={outfit} onDelete={() => handleDeleteOutfitPrompt(outfit)} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-12">
-                    <PackagePlus className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                    <p className="text-xl text-muted-foreground font-headline">Aún no has creado atuendos.</p>
-                    <p className="text-muted-foreground">Selecciona prendas de tu armario o usa las sugerencias de la IA para empezar.</p>
-                  </div>
-                )}
-              </TabsContent>
+                  {isLoadingOutfits ? (
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {Array.from({ length: 4 }).map((_, index) => (
+                         <Card key={index} className="h-60"><CardContent className="flex items-center justify-center h-full"><Loader2 className="h-8 w-8 animate-spin text-primary" /></CardContent></Card>
+                      ))}
+                    </div>
+                  ) : outfits.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      {outfits.map(outfit => (
+                        <OutfitCard key={outfit.id} outfit={outfit} onDelete={() => handleDeleteOutfitPrompt(outfit)} />
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <PackagePlus className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                      <p className="text-xl text-muted-foreground font-headline">Aún no has creado atuendos.</p>
+                      <p className="text-muted-foreground">Selecciona prendas de tu armario o usa las sugerencias de la IA para empezar.</p>
+                    </div>
+                  )}
+                </TabsContent>
 
-              <TabsContent value="planner">
-                <OutfitPlanner />
-              </TabsContent>
-            </Tabs>
-          </div>
+                <TabsContent value="planner">
+                  <OutfitPlanner />
+                </TabsContent>
+              </Tabs>
+            </div>
 
-          <div className="hidden lg:block lg:col-span-1">
-            <div className="sticky top-24 space-y-6"> {/* Adjusted top for sticky navbar */}
-               <StyleSuggestionSection wardrobe={wardrobeItems} onOutfitCreated={fetchOutfits} />
+            <div className="hidden lg:block lg:col-span-1">
+              <div className="sticky top-24 space-y-6">
+                 <StyleSuggestionSection wardrobe={wardrobeItems} onOutfitCreated={fetchOutfits} />
+              </div>
             </div>
           </div>
-        </div>
-      </main>
+        </main>
+      ) : (
+        <main className="flex-grow container mx-auto px-4 md:px-8 py-8 flex justify-center items-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </main>
+      )}
 
       <ClothingForm
         isOpen={isFormOpen}
@@ -412,7 +423,8 @@ export default function HomePage() {
         </AlertDialogContent>
       </AlertDialog>
       
-      <Footer currentYear={currentYear} />
+      {isClient && <Footer currentYear={currentYear} />}
     </div>
   );
 }
+
