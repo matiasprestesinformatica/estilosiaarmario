@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { APP_NAME, APP_ICON } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, UserCircle2, Menu, LayoutDashboard } from 'lucide-react';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetTrigger, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { useState } from 'react';
 import { usePathname } from 'next/navigation';
 
@@ -30,7 +30,7 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
     if (pathname === '/') {
       onTabChange(tabValue);
     }
-    // Navigation to "/" is handled by Link component itself
+    // Navigation to "/" is handled by Link component itself if href is "/"
     setIsMobileMenuOpen(false);
   };
   
@@ -67,11 +67,11 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
               {pathname !== '/' ? <Link href="/">{link.label}</Link> : <span>{link.label}</span>}
             </Button>
           ))}
-          <Button
+           <Button
+            asChild
             variant={pathname === "/dashboard" ? "secondary" : "ghost"}
             size="sm"
             className={`font-medium ${pathname === "/dashboard" ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'}`}
-            asChild
           >
             <Link href="/dashboard">
               <LayoutDashboard className="mr-1 h-4 w-4" />
@@ -103,7 +103,13 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
                   <span className="sr-only">Abrir menú</span>
                 </Button>
               </SheetTrigger>
-              <SheetContent side="right" className="w-[280px] p-6 pt-10">
+              <SheetContent side="right" className="w-[280px] p-6">
+                <SheetHeader className="mb-6">
+                  <SheetTitle className="font-headline text-2xl text-left">{APP_NAME} Menú</SheetTitle>
+                  <SheetDescription className="text-left">
+                    Navega por las secciones de la aplicación.
+                  </SheetDescription>
+                </SheetHeader>
                 <div className="flex flex-col space-y-3">
                   {mainPageNavLinks.map((navLink) => (
                     <Button
@@ -119,10 +125,10 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
                     </Button>
                   ))}
                   <Button
+                       asChild
                        variant={pathname === "/dashboard" ? "secondary" : "ghost"}
                        className={`w-full justify-start text-base ${ pathname === "/dashboard" ? 'text-primary font-semibold' : 'text-foreground'}`}
                        onClick={() => setIsMobileMenuOpen(false)}
-                       asChild
                   >
                       <Link href="/dashboard">
                           <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard
