@@ -1,3 +1,4 @@
+
 import type {NextConfig} from 'next';
 
 const nextConfig: NextConfig = {
@@ -34,6 +35,12 @@ const nextConfig: NextConfig = {
         port: '',
         pathname: '/sss/**',
       },
+      {
+        protocol: 'https',
+        hostname: 'openweathermap.org',
+        port: '',
+        pathname: '/img/wn/**',
+      }
     ],
   },
 };
