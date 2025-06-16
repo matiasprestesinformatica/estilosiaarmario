@@ -87,12 +87,11 @@ export default function HomePage() {
   };
 
   useEffect(() => {
-    // Fetch initial data only on the client after mount
     if (isClient) {
       fetchWardrobeItems();
       fetchOutfits();
     }
-  }, [isClient]); // Effect now depends on isClient
+  }, [isClient]);
 
   const handleAddItemClick = () => {
     setEditingItem(undefined);
@@ -215,7 +214,11 @@ export default function HomePage() {
         onTabChange={setActiveTab} 
       />
       
-      {isClient ? (
+      {!isClient ? (
+        <main className="flex-grow container mx-auto px-4 md:px-8 py-8 flex justify-center items-center">
+          <Loader2 className="h-16 w-16 animate-spin text-primary" />
+        </main>
+      ) : (
         <main className="flex-grow container mx-auto px-4 md:px-8 py-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-6">
@@ -233,7 +236,7 @@ export default function HomePage() {
                           <Lightbulb className="mr-2 h-4 w-4" /> Sugerencias IA
                         </Button>
                       </SheetTrigger>
-                      <SheetContent side="bottom" className="h-[80vh]">
+                      <SheetContent side="bottom" className="h-[80vh] p-4">
                          <SheetHeader className="mb-4">
                            <SheetTitle>Sugerencias de Estilo IA</SheetTitle>
                            <SheetDescription>
@@ -278,13 +281,13 @@ export default function HomePage() {
                     </div>
                   )}
                   {isLoadingItems ? (
-                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">
                       {Array.from({ length: 8 }).map((_, index) => (
                         <ClothingItemCardSkeleton key={index} />
                       ))}
                     </div>
                   ) : filteredItems.length > 0 ? (
-                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+                    <div className="grid grid-cols-1 xs:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-4 gap-4 md:gap-6">
                       {filteredItems.map(item => (
                         <ClothingItemCard
                           key={item.id}
@@ -345,10 +348,6 @@ export default function HomePage() {
               </div>
             </div>
           </div>
-        </main>
-      ) : (
-        <main className="flex-grow container mx-auto px-4 md:px-8 py-8 flex justify-center items-center">
-          <Loader2 className="h-16 w-16 animate-spin text-primary" />
         </main>
       )}
 

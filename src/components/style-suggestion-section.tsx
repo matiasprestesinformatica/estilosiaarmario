@@ -13,6 +13,7 @@ import type { ClothingItem } from '@/lib/types';
 import { generateStyleSuggestion, type GenerateStyleSuggestionOutput, type GenerateStyleSuggestionInput } from '@/ai/flows/generate-style-suggestion';
 import { createOutfit } from '@/app/actions/outfitActions';
 import { useToast } from '@/hooks/use-toast';
+import { StyleSuggestionSectionSkeleton } from './style-suggestion-section-skeleton';
 
 interface StyleSuggestionSectionProps {
   wardrobe: ClothingItem[];
@@ -112,7 +113,9 @@ export function StyleSuggestionSection({ wardrobe, onOutfitCreated }: StyleSugge
   return (
     <>
       <Card className="shadow-lg h-full flex flex-col">
-        <CardHeader className="hidden lg:block"> {/* Hide header on mobile sheet view to save space if SheetHeader is used */}
+        {/* CardHeader can be part of SheetHeader when used in Sheet, so keep it optional or contextual */}
+        {/* For standalone desktop view, CardHeader is good. */}
+        <CardHeader className="hidden lg:block">
           <CardTitle className="font-headline text-2xl flex items-center">
             <Wand2 className="h-6 w-6 mr-2 text-primary" />
             Sugerencias de Estilo IA
@@ -121,9 +124,9 @@ export function StyleSuggestionSection({ wardrobe, onOutfitCreated }: StyleSugge
             Obtén ideas de atuendos basadas en tu armario actual.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-6 flex-grow flex flex-col">
+        <CardContent className="space-y-6 flex-grow flex flex-col p-4 lg:p-6">
           <ScrollArea className="flex-grow">
-            <div className="p-1 pr-3 space-y-6"> {/* Added padding for scrollbar */}
+            <div className="p-1 pr-3 space-y-6">
               <div>
                 <Label htmlFor="occasion" className="text-sm font-medium">Ocasión (opcional)</Label>
                 <Input
@@ -137,15 +140,17 @@ export function StyleSuggestionSection({ wardrobe, onOutfitCreated }: StyleSugge
                 />
               </div>
             
-              {error && (
+              {isLoading && <StyleSuggestionSectionSkeleton />}
+
+              {!isLoading && error && (
                 <div className="text-destructive-foreground bg-destructive p-3 rounded-md flex items-center text-sm">
                   <AlertTriangle className="h-5 w-5 mr-2 shrink-0" />
                   {error}
                 </div>
               )}
 
-              {suggestion && suggestion.styleSuggestion && (
-                <div className="mt-6 p-4 border rounded-md bg-secondary/30 space-y-3">
+              {!isLoading && suggestion && suggestion.styleSuggestion && (
+                <div className="mt-6 p-4 border rounded-md bg-secondary/30 space-y-3 animate-fade-in">
                   <h3 className="text-lg font-headline text-primary">Atuendo Sugerido:</h3>
                   <p className="text-foreground whitespace-pre-wrap text-sm">{suggestion.styleSuggestion.outfitSuggestion}</p>
                   
@@ -165,7 +170,7 @@ export function StyleSuggestionSection({ wardrobe, onOutfitCreated }: StyleSugge
               )}
             </div>
           </ScrollArea>
-          <div className="mt-auto pt-4 space-y-2"> {/* Buttons at the bottom */}
+          <div className="mt-auto pt-4 space-y-2">
             <Button 
               onClick={handleGenerateSuggestion} 
               disabled={isLoading || wardrobe.length === 0 || isSavingOutfit} 
@@ -180,7 +185,7 @@ export function StyleSuggestionSection({ wardrobe, onOutfitCreated }: StyleSugge
                 "Obtener Sugerencia"
               )}
             </Button>
-            {suggestion && suggestion.styleSuggestion && suggestion.styleSuggestion.suggestedItemNames.length > 0 && (
+            {!isLoading && suggestion && suggestion.styleSuggestion && suggestion.styleSuggestion.suggestedItemNames.length > 0 && (
               <Button 
                 onClick={() => setIsSaveOutfitDialogOpen(true)} 
                 disabled={isSavingOutfit} 
