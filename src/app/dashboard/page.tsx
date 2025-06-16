@@ -1,11 +1,11 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Thermometer, Package, Users, CalendarCheck } from 'lucide-react';
+import { Thermometer, Package, Users, CalendarCheck, AlertCircle } from 'lucide-react';
 import { getWardrobeStatistics, type WardrobeStats } from '@/app/actions/dashboardActions';
+import { OutfitOfTheDay } from '@/components/outfit-of-the-day';
 import Image from 'next/image';
-import { AlertCircle } from 'lucide-react';
 
-// Weather API details
+
 const OPENWEATHERMAP_API_KEY = process.env.OPENWEATHERMAP_API_KEY;
 const MONTEVIDEO_LAT = -34.9089299613783;
 const MONTEVIDEO_LON = -56.2126367503756;
@@ -31,11 +31,9 @@ async function getWeatherData(): Promise<{ current: WeatherInfo | null; forecast
   }
 
   try {
-    // Fetch current weather
     const currentRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${MONTEVIDEO_LAT}&lon=${MONTEVIDEO_LON}&appid=${OPENWEATHERMAP_API_KEY}&units=metric&lang=es`);
     if (!currentRes.ok) {
         const errorData = await currentRes.json().catch(() => ({ message: currentRes.statusText }));
-        // Throw a specific message for 401 errors
         if (currentRes.status === 401) {
           throw new Error(`Invalid API key. Please check your OpenWeatherMap API key. (Status: ${currentRes.status})`);
         }
@@ -43,7 +41,6 @@ async function getWeatherData(): Promise<{ current: WeatherInfo | null; forecast
     }
     const currentData = await currentRes.json();
 
-    // Fetch 5-day forecast
     const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?lat=${MONTEVIDEO_LAT}&lon=${MONTEVIDEO_LON}&appid=${OPENWEATHERMAP_API_KEY}&units=metric&lang=es`);
      if (!forecastRes.ok) {
         const errorData = await forecastRes.json().catch(() => ({ message: forecastRes.statusText }));
@@ -68,7 +65,7 @@ async function getWeatherData(): Promise<{ current: WeatherInfo | null; forecast
     let tomorrowMinTemp = Infinity;
     let tomorrowMaxTemp = -Infinity;
     let tomorrowDescription = "No disponible";
-    let tomorrowIcon = "https://openweathermap.org/img/wn/01d@2x.png"; // Default icon
+    let tomorrowIcon = "https://openweathermap.org/img/wn/01d@2x.png"; 
     let representativeEntryFound = false;
 
     const tomorrowEntries = forecastData.list.filter((item: any) => item.dt_txt.startsWith(tomorrowDateString));
@@ -77,14 +74,13 @@ async function getWeatherData(): Promise<{ current: WeatherInfo | null; forecast
         for (const item of tomorrowEntries) {
             tomorrowMinTemp = Math.min(tomorrowMinTemp, item.main.temp_min);
             tomorrowMaxTemp = Math.max(tomorrowMaxTemp, item.main.temp_max);
-            // Try to get a midday (e.g., 12:00 or 15:00) forecast entry for description and icon
             if (item.dt_txt.includes("12:00:00") || item.dt_txt.includes("15:00:00")) {
                  tomorrowDescription = item.weather[0].description;
                  tomorrowIcon = `https://openweathermap.org/img/wn/${item.weather[0].icon}@2x.png`;
                  representativeEntryFound = true;
             }
         }
-        if (!representativeEntryFound) { // Fallback if no midday entry, use the first available for tomorrow
+        if (!representativeEntryFound) { 
             tomorrowDescription = tomorrowEntries[0].weather[0].description;
             tomorrowIcon = `https://openweathermap.org/img/wn/${tomorrowEntries[0].weather[0].icon}@2x.png`;
         }
@@ -102,7 +98,7 @@ async function getWeatherData(): Promise<{ current: WeatherInfo | null; forecast
     return { current, forecast };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "Unknown error fetching weather data.";
-    console.error("Error fetching weather data:", errorMessage); // Keep console error for debugging
+    console.error("Error fetching weather data:", errorMessage); 
     return { current: null, forecast: null, error: errorMessage };
   }
 }
@@ -127,7 +123,7 @@ export default async function DashboardPage() {
     } else if (weatherError.includes("Invalid API key") || weatherError.includes("401")) {
       weatherUiErrorMessage = "Error: La API key de OpenWeatherMap es inválida. Verifica que sea correcta en tu archivo .env y reinicia el servidor.";
     } else {
-      weatherUiErrorMessage = `Error al cargar datos del clima. ${weatherError}`;
+      weatherUiErrorMessage = `Error al cargar datos del clima. ${weatherError.substring(0, 100)}${weatherError.length > 100 ? '...' : ''}`;
     }
   }
 
@@ -220,6 +216,12 @@ export default async function DashboardPage() {
               )}
             </CardContent>
           </Card>
+
+          {/* Widget Tu Atuendo de Hoy */}
+          <div className="md:col-span-2"> {/* Hace que este widget ocupe ambas columnas en md y superior */}
+            <OutfitOfTheDay />
+          </div>
+
         </div>
       </main>
     </div>

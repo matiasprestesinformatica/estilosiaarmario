@@ -4,7 +4,7 @@
 import prisma from '@/lib/prisma';
 import type { PlannedOutfit, Outfit, ClothingItem } from '@/lib/types';
 import { revalidatePath } from 'next/cache';
-import { startOfMonth, endOfMonth, parseISO, formatISO } from 'date-fns';
+import { startOfMonth, endOfMonth, parseISO, formatISO, startOfDay } from 'date-fns';
 import type { 
   PlannedOutfit as PrismaPlannedOutfit, 
   Outfit as PrismaOutfit,
@@ -45,9 +45,8 @@ export async function planOutfit(date: string, outfitId: string): Promise<Planne
   try {
     const targetDate = parseISO(date); // Ensures date is parsed correctly
     
-    // Upsert: update if exists for that date, otherwise create
     const plannedOutfit = await prisma.plannedOutfit.upsert({
-      where: { date: targetDate }, // Prisma will match based on the unique field
+      where: { date: targetDate }, 
       create: {
         date: targetDate,
         outfitId: outfitId,
@@ -58,6 +57,7 @@ export async function planOutfit(date: string, outfitId: string): Promise<Planne
       include: { outfit: { include: { clothingItems: true } } },
     });
     revalidatePath('/');
+    revalidatePath('/dashboard');
     return mapToClientPlannedOutfit(plannedOutfit);
   } catch (error) {
     console.error('Error planning outfit (server log):', error);
@@ -68,7 +68,7 @@ export async function planOutfit(date: string, outfitId: string): Promise<Planne
 
 export async function getPlannedOutfitsForMonth(year: number, month: number): Promise<PlannedOutfit[]> {
   try {
-    const startDate = startOfMonth(new Date(year, month - 1)); // month is 1-indexed for user, 0-indexed for Date
+    const startDate = startOfMonth(new Date(year, month - 1)); 
     const endDate = endOfMonth(new Date(year, month - 1));
 
     const plannedOutfits = await prisma.plannedOutfit.findMany({
@@ -95,6 +95,7 @@ export async function deletePlannedOutfit(id: string): Promise<void> {
       where: { id },
     });
     revalidatePath('/');
+    revalidatePath('/dashboard');
   } catch (error) {
     console.error('Error deleting planned outfit (server log):', error);
     const originalErrorMessage = error instanceof Error ? error.message : 'Unknown error deleting planned outfit.';
@@ -115,5 +116,23 @@ export async function getPlannedOutfitForDate(date: string): Promise<PlannedOutf
     console.error('Error fetching planned outfit for date (server log):', error);
     const originalErrorMessage = error instanceof Error ? error.message : 'Unknown error fetching planned outfit for date.';
     throw new Error(`No se pudo cargar el atuendo planificado para la fecha. Detalles: ${originalErrorMessage}`);
+  }
+}
+
+export async function getTodaysPlannedOutfit(): Promise<PlannedOutfit | null> {
+  try {
+    const today = startOfDay(new Date()); 
+
+    const plannedOutfit = await prisma.plannedOutfit.findUnique({
+      where: {
+        date: today,
+      },
+      include: { outfit: { include: { clothingItems: true } } },
+    });
+
+    return plannedOutfit ? mapToClientPlannedOutfit(plannedOutfit) : null;
+  } catch (error) {
+    console.error('Error fetching today\'s planned outfit:', error);
+    return null; 
   }
 }
