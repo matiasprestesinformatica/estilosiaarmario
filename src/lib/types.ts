@@ -10,7 +10,7 @@ export interface ClothingItem {
   description?: string;
 }
 
-export type Category = 'Tops' | 'Bottoms' | 'Dresses' | 'Outerwear' | 'Shoes' | 'Accessories';
+export type Category = 'Prendas Superiores' | 'Prendas Inferiores' | 'Vestidos' | 'Abrigos' | 'Zapatos' | 'Accesorios';
 
 export interface CategoryOption {
   value: Category;

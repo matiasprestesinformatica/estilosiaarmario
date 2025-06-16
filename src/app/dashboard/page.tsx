@@ -7,8 +7,8 @@ import { AlertCircle } from 'lucide-react';
 
 // Weather API details
 const OPENWEATHERMAP_API_KEY = process.env.OPENWEATHERMAP_API_KEY;
-const MONTEVIDEO_LAT = -34.90328;
-const MONTEVIDEO_LON = -56.18816;
+const MONTEVIDEO_LAT = -34.9089299613783;
+const MONTEVIDEO_LON = -56.2126367503756;
 
 interface WeatherInfo {
   temp: number;

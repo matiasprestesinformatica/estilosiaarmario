@@ -2,12 +2,12 @@ import type { CategoryOption } from './types';
 import { Shirt, GalleryHorizontal, ShoppingBag, Wind, Footprints, Sparkles, Bot } from 'lucide-react';
 
 export const CATEGORIES: CategoryOption[] = [
-  { value: 'Tops', label: 'Prendas Superiores', icon: Shirt },
-  { value: 'Bottoms', label: 'Prendas Inferiores', icon: GalleryHorizontal },
-  { value: 'Dresses', label: 'Vestidos', icon: ShoppingBag },
-  { value: 'Outerwear', label: 'Abrigos', icon: Wind },
-  { value: 'Shoes', label: 'Zapatos', icon: Footprints },
-  { value: 'Accessories', label: 'Accesorios', icon: Sparkles },
+  { value: 'Prendas Superiores', label: 'Prendas Superiores', icon: Shirt },
+  { value: 'Prendas Inferiores', label: 'Prendas Inferiores', icon: GalleryHorizontal },
+  { value: 'Vestidos', label: 'Vestidos', icon: ShoppingBag },
+  { value: 'Abrigos', label: 'Abrigos', icon: Wind },
+  { value: 'Zapatos', label: 'Zapatos', icon: Footprints },
+  { value: 'Accesorios', label: 'Accesorios', icon: Sparkles },
 ];
 
 export const APP_NAME = "ArmarioIA";
