@@ -27,7 +27,7 @@ export function Footer({ currentYear }: FooterProps) {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center text-center md:text-left">
           {/* Copyright */}
           <div className="text-sm">
-            &copy; {currentYear ?? new Date().getFullYear()} ArmarioIA. Todos los derechos reservados.
+            {currentYear ? `© ${currentYear} ArmarioIA. Todos los derechos reservados.` : `© ArmarioIA. Todos los derechos reservados.`}
           </div>
 
           {/* Social Media Icons */}

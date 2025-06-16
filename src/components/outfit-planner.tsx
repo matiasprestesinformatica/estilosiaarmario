@@ -15,13 +15,17 @@ import { Loader2, Trash2, XCircle } from 'lucide-react';
 import Image from 'next/image';
 
 export function OutfitPlanner() {
-  const [currentMonth, setCurrentMonth] = useState(new Date());
+  const [currentMonth, setCurrentMonth] = useState<Date | null>(null); // Initialize to null
   const [plannedOutfits, setPlannedOutfits] = useState<PlannedOutfit[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(undefined);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setCurrentMonth(new Date()); // Set on client side after mount
+  }, []);
 
   const fetchPlannedOutfits = (date: Date) => {
     setIsLoading(true);
@@ -37,7 +41,9 @@ export function OutfitPlanner() {
   };
 
   useEffect(() => {
-    fetchPlannedOutfits(currentMonth);
+    if (currentMonth) { // Fetch only if currentMonth is set
+      fetchPlannedOutfits(currentMonth);
+    }
   }, [currentMonth, toast]);
 
   const handleDayClick = (day: Date) => {
@@ -52,7 +58,7 @@ export function OutfitPlanner() {
           const dateString = format(selectedDate, 'yyyy-MM-dd');
           await planOutfit(dateString, outfitId);
           toast({ title: "Atuendo Planificado", description: "El atuendo ha sido asignado a la fecha." });
-          fetchPlannedOutfits(currentMonth); // Refresh
+          if (currentMonth) fetchPlannedOutfits(currentMonth); // Refresh
         } catch (error) {
           console.error('Error planning outfit:', error);
           toast({ title: "Error", description: (error as Error).message || "No se pudo planificar el atuendo.", variant: "destructive" });
@@ -67,7 +73,7 @@ export function OutfitPlanner() {
         try {
             await deletePlannedOutfit(plannedOutfitId);
             toast({ title: "Planificación Eliminada", description: "El atuendo ha sido desasignado de esta fecha." });
-            fetchPlannedOutfits(currentMonth); // Refresh
+            if (currentMonth) fetchPlannedOutfits(currentMonth); // Refresh
         } catch (error) {
             console.error('Error deleting planned outfit:', error);
             toast({ title: "Error", description: (error as Error).message || "No se pudo eliminar la planificación.", variant: "destructive" });
@@ -98,8 +104,8 @@ export function OutfitPlanner() {
             <CardDescription>Asigna tus atuendos guardados a fechas específicas en el calendario.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
-            {isLoading && !isPending && <Loader2 className="h-8 w-8 animate-spin text-primary my-10" />}
-            {(!isLoading || isPending) && (
+            {(isLoading && !isPending && !currentMonth) && <Loader2 className="h-8 w-8 animate-spin text-primary my-10" />}
+            {currentMonth && (!isLoading || isPending) && (
               <Calendar
                 mode="single"
                 selected={selectedDate}
