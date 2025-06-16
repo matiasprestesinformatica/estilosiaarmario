@@ -33,8 +33,13 @@ export function Footer({ currentYear }: FooterProps) {
           {/* Social Media Icons */}
           <div className="flex justify-center md:justify-center space-x-4">
             {socialLinks.map((social) => (
-              <Link key={social.name} href={social.href} target="_blank" rel="noopener noreferrer"
-                 className="text-muted-foreground hover:text-primary transition-colors">
+              <Link
+                key={social.name}
+                href={social.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-muted-foreground hover:text-primary transition-colors"
+                legacyBehavior>
                 <social.icon className="h-6 w-6" />
                 <span className="sr-only">{social.name}</span>
               </Link>
@@ -44,7 +49,11 @@ export function Footer({ currentYear }: FooterProps) {
           {/* Footer Links */}
           <div className="flex flex-col md:flex-row justify-center md:justify-end space-y-2 md:space-y-0 md:space-x-4 text-sm">
             {footerLinks.map((link) => (
-              <Link key={link.name} href={link.href} className="hover:text-primary hover:underline transition-colors">
+              <Link
+                key={link.name}
+                href={link.href}
+                className="hover:text-primary hover:underline transition-colors"
+                legacyBehavior>
                 {link.name}
               </Link>
             ))}

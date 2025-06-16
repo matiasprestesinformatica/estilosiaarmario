@@ -51,9 +51,15 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
   return (
     <nav className="sticky top-0 z-50 w-full border-b bg-background/80 backdrop-blur-sm">
       <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-8">
-        <Link href="/" className="flex items-center gap-2" onClick={() => pathname !== '/' && setIsMobileMenuOpen(false) }>
-          <AppIcon className="h-7 w-7 text-primary" />
-          <span className="text-2xl font-headline font-bold tracking-tight">{APP_NAME}</span>
+        <Link
+          href="/"
+          onClick={() => pathname !== '/' && setIsMobileMenuOpen(false) }
+          legacyBehavior
+        >
+          <a className="flex items-center gap-2">
+            <AppIcon className="h-7 w-7 text-primary" />
+            <span className="text-2xl font-headline font-bold tracking-tight">{APP_NAME}</span>
+          </a>
         </Link>
 
         <div className="hidden md:flex items-center gap-1">
@@ -66,7 +72,7 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
               className={`font-medium ${ (pathname === '/' && activeTab === link.value) ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'}`}
               asChild={pathname !== '/'}
             >
-              {pathname !== '/' ? <Link href="/">{link.label}</Link> : link.label}
+              {pathname !== '/' ? <Link href="/" legacyBehavior>{link.label}</Link> : link.label}
             </Button>
           ))}
           <Link href="/dashboard" passHref legacyBehavior>
@@ -74,6 +80,7 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
               variant={pathname === "/dashboard" ? "secondary" : "ghost"}
               size="sm"
               className={`font-medium ${pathname === "/dashboard" ? 'text-primary' : 'text-muted-foreground hover:text-primary/80'}`}
+              as="a" // Ensure Button renders as an <a> tag when used with legacyBehavior Link
             >
               <LayoutDashboard className="mr-1 h-4 w-4" />
               Dashboard
@@ -117,6 +124,7 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
                         <Button
                           variant={(pathname === '/' && activeTab === link.value) ? "secondary" : "ghost"}
                           className={`w-full justify-start text-base ${ (pathname === '/' && activeTab === link.value) ? 'text-primary font-semibold' : 'text-foreground'}`}
+                          as="a" // Ensure Button renders as an <a> tag
                         >
                           {link.label}
                         </Button>
@@ -126,6 +134,7 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
                     <Button
                          variant={pathname === "/dashboard" ? "secondary" : "ghost"}
                          className={`w-full justify-start text-base ${ pathname === "/dashboard" ? 'text-primary font-semibold' : 'text-foreground'}`}
+                         as="a" // Ensure Button renders as an <a> tag
                     >
                         <LayoutDashboard className="mr-2 h-5 w-5" /> Dashboard
                     </Button>
@@ -143,5 +152,3 @@ export function Navbar({ onAddItemClick, activeTab, onTabChange }: NavbarProps) 
     </nav>
   );
 }
-
-    
